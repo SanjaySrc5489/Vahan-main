@@ -1,18 +1,17 @@
 FROM python:3.10-slim
 
-# Install dependencies for Chrome and Chromedriver
-RUN apt-get update && apt-get install -y wget gnupg curl unzip fonts-liberation libxss1 libappindicator3-1 libatk-bridge2.0-0 libgtk-3-0 libnss3 libx11-xcb1 xvfb \
+# Install dependencies for Chrome + Selenium
+RUN apt-get update && apt-get install -y wget curl gnupg unzip fonts-liberation libxss1 libappindicator3-1 libatk-bridge2.0-0 libgtk-3-0 libnss3 libx11-xcb1 xvfb \
     && mkdir -p /usr/share/desktop-directories
 
-# Add Google Chrome’s official repository (modern method)
+# Add Google Chrome repo and install Chrome
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-linux-signing-keyring.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Chromedriver matching Chrome version
-RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1) \
-    && DRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION") \
+# Install the latest Chromedriver (always works)
+RUN DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE) \
     && wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${DRIVER_VERSION}/chromedriver_linux64.zip" \
     && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
     && rm /tmp/chromedriver.zip
