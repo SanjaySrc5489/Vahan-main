@@ -25,4 +25,4 @@ ENV CHROMEDRIVER_PATH=/usr/local/bin/chromedriver
 ENV DISPLAY=:99
 
 EXPOSE 9936
-CMD ["gunicorn", "go:app", "--bind", "0.0.0.0:9936"]
+CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:9936"]
