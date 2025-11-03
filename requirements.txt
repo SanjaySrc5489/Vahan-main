@@ -1,2 +1,7 @@
 Flask
 gunicorn
+Flask
+gunicorn
+selenium
+webdriver-manager
+google-chrome-stable
