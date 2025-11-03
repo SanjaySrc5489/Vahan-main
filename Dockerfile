@@ -27,7 +27,7 @@ ENV CHROME_BIN=/usr/bin/google-chrome
 ENV PATH="/usr/local/bin:${PATH}"
 
 # Expose the port
-EXPOSE 9936
+EXPOSE 5000
 
 # Start your Flask app using Gunicorn
-CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:9936"]
+CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:5000"]
