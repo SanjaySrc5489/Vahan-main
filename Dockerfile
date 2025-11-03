@@ -2,17 +2,16 @@ FROM python:3.10-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install essential packages
-RUN apt-get update && apt-get install -y \
-    wget unzip curl grep \
+# Install dependencies and jq for JSON parsing
+RUN apt-get update && apt-get install -y wget unzip curl jq gnupg ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Chrome and Chromedriver (matching versions)
+# Install Chrome and matching Chromedriver
 RUN set -ex \
-    && CHROME_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json | sed -n 's/.*"Stable": {"version": "\([^"]*\)".*/\1/p') \
+    && CHROME_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json | jq -r '.channels.Stable.version') \
     && echo "Installing Chrome ${CHROME_VERSION}" \
-    && wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip -O /tmp/chrome.zip \
-    && wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip -O /tmp/chromedriver.zip \
+    && wget -t 3 -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip" -O /tmp/chrome.zip \
+    && wget -t 3 -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip" -O /tmp/chromedriver.zip \
     && unzip /tmp/chrome.zip -d /opt/ \
     && unzip /tmp/chromedriver.zip -d /opt/ \
     && mv /opt/chrome-linux64 /opt/chrome \
@@ -20,20 +19,25 @@ RUN set -ex \
     && chmod +x /usr/local/bin/chromedriver \
     && rm -rf /tmp/*.zip
 
-# Set environment variables
+# Set Chrome environment variables
 ENV CHROME_BIN=/opt/chrome/chrome
 ENV PATH="/usr/local/bin:/opt/chrome:${PATH}"
 
 # Set working directory
 WORKDIR /app
 
-# Copy and install Python requirements
+# Copy requirements and install
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all source files
+# Copy application
 COPY . .
 
+# Expose Render port
+EXPOSE 8080
+
+# Start Flask app with Gunicorn (Render uses $PORT)
+CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:${PORT}"]
 # Expose port
 EXPOSE 9936
 
